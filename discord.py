@@ -30,11 +30,15 @@ def get_thumbnail(video: PlaylistItem) -> str:
     return res.url
 
 
-thumbnails = [
-    get_thumbnail(v)
-    for theory in [GAME_THEORY, FILM_THEORY, FOOD_THEORY, STYLE_THEORY]
-    for v in api.get_playlist_items(playlist_id=theory, count=None).items
-]
+def get_all_thumbnails() -> list[str]:
+    return [
+        get_thumbnail(v)
+        for theory in [GAME_THEORY, FILM_THEORY, FOOD_THEORY, STYLE_THEORY]
+        for v in api.get_playlist_items(playlist_id=theory, count=None).items
+    ]
+
+
+thumbnails = get_all_thumbnails()
 
 
 async def next_thumbnail(inter: ApplicationCommandInteraction) -> None:
@@ -72,6 +76,9 @@ async def change_frequency(inter: ApplicationCommandInteraction, hours: float):
 
 @tasks.loop(hours=24)
 async def send_daily_image():
+    # So that it can get new videos without dealing with PubSubHubbub
+    thumbnails = get_all_thumbnails()
+
     for _, channel in channels.items():
         await bot.get_channel(channel).send(random.choice(thumbnails))
 
